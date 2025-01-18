@@ -1,22 +1,14 @@
-/**
- * This controller is to build a api request system for wallet
- */
-const root = process.cwd();
+
 require('dotenv').config();
-var querystring = require('querystring');
 var express = require('express');
-const fs = require("fs");
 var app = express();
 var bodyParser = require('body-parser');
-const modules = require("../../modules/index")
 const redis = require("../../utils/redis")
-const qr = require('qrcode');
-const b58 = require("b58")
 const auth = require("./middleware/auth");
 const tw = require('twitter-api-sdk')
 const Client = tw.Client;
 const twAuth = tw.auth;
-
+const db = require("../../utils/db")
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
@@ -70,6 +62,7 @@ app.get(base_path+'/manifest/pumpmax.json', async function(req, res) {
 //Twitter login 
 const STATE = "my-state";
 const SITEBASE = "https://pumpmax.fun/"
+const TESTNETBASE = "https://testnet.pumpmax.fun/"
 const authClient = new twAuth.OAuth2User({
     client_id: process.env.CLIENT_ID,
     client_secret: process.env.CLIENT_SECRET,
@@ -81,29 +74,28 @@ app.get(base_path+"/callback", async function (req, res) {
     try {
           
       const { code, state } = req.query;
-      console.log(code,state)
+      // console.log(code,state)
       if (state !== STATE) return res.status(500).send("State isn't matching");
       const token = await authClient.requestAccessToken(String(code));
-      console.log("auth token :: ",token)
+      // console.log("auth token :: ",token)
   
       authClient.token = token.token;
   
       const client = new Client(authClient);
       const users = await client.users.findMyUser();
-      console.log("users ::",users)
+      // console.log("users ::",users)
       if(users && users?.data && users.data?.id)
       {
         const userData = users?.data
+        await db.newAccount(userData)
         const token = await auth.newkey(users.data.id)
-        // await action.userLogin(userData,userData.id,0)
         res.redirect(
-            SITEBASE+"?id="+token
+          TESTNETBASE+"?id="+token
         )
       }else
       {
         return res.status(500).send("Login failed");
       }
-      // res.redirect("/tweets");
     } catch (error) {
       console.log(error);
       return res.status(500).send("Server error");
@@ -120,20 +112,6 @@ app.get(base_path+"/callback", async function (req, res) {
     });
     res.redirect(authUrl);
   });
-
-/**
- *Wallet connection logic
- *
- * 1.Dapp generate a random key (32 length)
- * 
- * 2.Dapp params key into webapp link 
- * 
- * 3.Dapp loop call api interface with random Key for callback/webhook
- * 
- * 4.User open Webapp with generated link
- * 
- * 5.Tonspack server update information of callback address
- */
 
 const crypto = require("crypto");
 

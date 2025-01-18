@@ -29,11 +29,10 @@ function unique(arr) {
  * User sytstem 
  */
 
-async function newAccount(data,invite) {
+async function newAccount(data) {
     if ((await getAccountById(data.id)).length > 0) {
         return false;
     }
-    data['invite'] = invite || 0;
     const pool = await MongoClient.connect(process.env.SQL_HOST)
     var db = pool.db(mainDB);
     var ret = await db.collection(sUser).insertOne(data);
@@ -51,9 +50,19 @@ async function getAccountById(uid) {
 }
 
 
+async function getAllUsers() {
+    const pool = await MongoClient.connect(process.env.SQL_HOST)
+    var db = pool.db(mainDB);
+    var ret = await db.collection(sUser).find({
+       
+    }).project({}).toArray();
+    await pool.close();
+    return ret;
+}
 
 module.exports = {
     newAccount,
     getAccountById,
     unique,
+    getAllUsers,
 }
