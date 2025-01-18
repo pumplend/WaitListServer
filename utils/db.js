@@ -1,10 +1,7 @@
 var MongoClient = require('mongodb').MongoClient;
 require('dotenv').config()
     //DB name
-const mainDB = "pumpmax_twitter"
-
-const actionConfig = require("../modules/action/actionRules.json")
-
+const mainDB = "pumpmax_waitlist"
 //Sheet name
 const sUser = "users";
 //DB struct

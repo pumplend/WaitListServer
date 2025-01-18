@@ -12,7 +12,6 @@ const modules = require("../../modules/index")
 const redis = require("../../utils/redis")
 const qr = require('qrcode');
 const b58 = require("b58")
-const action = require("../../modules/action/index")
 const auth = require("./middleware/auth");
 const tw = require('twitter-api-sdk')
 const Client = tw.Client;
@@ -32,7 +31,7 @@ app.listen(12001, async function() {
     console.log('web-server start')
 })
 
-const base_path = "/api"
+const base_path = ""
 async function sendErr(res, err) {
     if (!err) {
         err = "unknow error"
@@ -91,21 +90,14 @@ app.get(base_path+"/callback", async function (req, res) {
   
       const client = new Client(authClient);
       const users = await client.users.findMyUser();
-      console.log(users)
+      console.log("users ::",users)
       if(users && users?.data && users.data?.id)
       {
         const userData = users?.data
         const token = await auth.newkey(users.data.id)
-        // console.log("⚠ The invite Data",req.body.invite,parseInt(req.body.invite,16))
-        // res.status(200).send({
-        //     "code": 200,
-        //     "token": token,
-        //     "uid":users.data.id,
-        //     "data": await action.userLogin(userData,userData.id,0)
-        // })
-        await action.userLogin(userData,userData.id,0)
+        // await action.userLogin(userData,userData.id,0)
         res.redirect(
-            SITEBASE+"?tk="+token
+            SITEBASE+"?id="+token
         )
       }else
       {
